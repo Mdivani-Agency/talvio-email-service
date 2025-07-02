@@ -5,7 +5,10 @@ export type MiddyApiGWEvent<TBody = null, TPath = null, TQuery = null> = Omit<
   'body' | 'pathParameters' | 'queryStringParameters'
 > & { body: TBody; pathParameters: TPath; queryStringParameters: TQuery };
 
-// Example
-export type ExampleRequest = { profileId?: string; userId?: string };
+export type EmailTemplate = 'magic_link' | 'welcome';
 
-export type ExampleParams = Required<ExampleRequest>;
+export type SendEmailRequest = {
+  to: string[];
+  template: EmailTemplate;
+  templateData: Record<string, string>;
+};

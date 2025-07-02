@@ -1,7 +1,7 @@
 {
-  "name": "rest-api-template",
+  "name": "email-service",
   "version": "1.0.0",
-  "description": "",
+  "description": "Email service",
   "main": "serverless.ts",
   "scripts": {
     "format": "prettier . --write",
@@ -18,6 +18,7 @@
     "node": ">=18.18.0"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "3.840.0",
     "@middy/core": "4.1.0",
     "@middy/http-cors": "4.1.0",
     "@middy/http-error-handler": "4.1.0",

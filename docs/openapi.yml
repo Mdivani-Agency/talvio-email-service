@@ -1,187 +1,55 @@
 openapi: 3.0.0
 info:
-  title: Generic CRUD API Template
-  description: A generic CRUD API documentation template with common error responses.
+  title: Email Service API
+  description: API for sending templated emails via AWS SES.
   version: 1.0.0
 servers:
-  - url: https://api.generic.com/v1
-  - url: https://api.dev.generic.com/v1
-
+  - url: https://api.cohub.click/v1
+    description: Development server
+  - url: https://api.talvio.co/v1
+    description: Production server
 paths:
-  /items:
+  /send-email:
     post:
-      summary: Create an Item
-      operationId: createItem
-      security:
-        - ApiKeyAuth: []
+      summary: Send templated emails
+      operationId: sendEmail
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ItemInput'
+              type: object
+              required:
+                - to
+                - template
+                - templateData
+              properties:
+                to:
+                  type: array
+                  items:
+                    type: string
+                    format: email
+                  description: List of recipient email addresses
+                template:
+                  type: string
+                  enum: [magic_link, welcome]
+                  description: Email template to use
+                templateData:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Key-value pairs for template variables
       responses:
-        '201':
-          description: Item created successfully.
+        '200':
+          description: Emails sent successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Item'
+                type: object
+                properties:
+                  message:
+                    type: string
         '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-    get:
-      summary: List Items
-      operationId: listItems
-      parameters:
-        - $ref: '#/components/parameters/page'
-        - $ref: '#/components/parameters/pageSize'
-      responses:
-        '200':
-          description: List of items retrieved successfully.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Item'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /items/{itemId}:
-    get:
-      summary: Retrieve an Item
-      operationId: getItem
-      parameters:
-        - name: itemId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Item retrieved successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Item'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    patch:
-      summary: Update an Item
-      operationId: updateItem
-      parameters:
-        - name: itemId
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ItemInput'
-      responses:
-        '200':
-          description: Item updated successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Item'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    delete:
-      summary: Delete an Item
-      operationId: deleteItem
-      parameters:
-        - name: itemId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Item deleted successfully.
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-components:
-  securitySchemes:
-    ApiKeyAuth:
-      type: apiKey
-      in: header
-      name: X-API-KEY
-
-  parameters:
-    page:
-      name: page
-      in: query
-      schema:
-        type: integer
-      description: Pagination page number
-      example: 1
-    pageSize:
-      name: pageSize
-      in: query
-      schema:
-        type: integer
-      description: Number of items per page
-      example: 10
-
-  responses:
-    BadRequest:
-      description: Bad Request
-    Unauthorized:
-      description: Unauthorized
-    NotFound:
-      description: Resource not found
-
-  schemas:
-    Item:
-      type: object
-      properties:
-        id:
-          type: string
-          example: '123'
-        name:
-          type: string
-          example: 'Sample Item'
-        description:
-          type: string
-          example: 'This is a sample item.'
-        status:
-          type: string
-          enum:
-            - ACTIVE
-            - INACTIVE
-
-    ItemInput:
-      type: object
-      properties:
-        name:
-          type: string
-          example: 'Sample Item'
-        description:
-          type: string
-          example: 'This is a sample item.'
-        status:
-          type: string
-          enum:
-            - ACTIVE
-            - INACTIVE
-      required:
-        - name
-        - status
+          description: Invalid request
+        '500':
+          description: Internal server error
