@@ -55,6 +55,9 @@ const serverlessConfiguration: AWS = {
     apiKeys: [
       {
         name: '${ssm:/${self:provider.stage}/gw/generic/api-key-name}',
+        usagePlan: {
+          name: '${ssm:/${self:provider.stage}/gw/generic/usageplan-name}',
+        },
       },
     ],
     esbuild: {

@@ -1,6 +1,6 @@
 import httpError from 'http-errors';
 import { privateValidationMiddleware } from '@lib/middlewares';
-import { EmailTemplate, MiddyApiGWEvent, SendEmailRequest } from '@lib/types';
+import { MiddyApiGWEvent, SendEmailRequest } from '@lib/types';
 import { emailService } from '@lib/services';
 import { schema } from './schema';
 
