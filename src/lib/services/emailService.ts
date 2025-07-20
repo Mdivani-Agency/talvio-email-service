@@ -1,4 +1,8 @@
-import { SendTemplatedEmailCommandInput, SendTemplatedEmailCommand, SESClient } from '@aws-sdk/client-ses';
+import {
+  SendTemplatedEmailCommandInput,
+  SendTemplatedEmailCommand,
+  SESClient,
+} from '@aws-sdk/client-ses';
 import { EmailTemplate, SendEmailRequest } from '@lib/types';
 
 const templateMap: Record<EmailTemplate, string> = {
