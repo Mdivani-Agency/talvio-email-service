@@ -12,6 +12,7 @@ const serverlessConfiguration: AWS = {
     stage: '${opt:stage, "dev"}',
     region: 'us-west-1',
     environment: {
+      STAGE: '${self:provider.stage}',
       SES_FROM_EMAIL: '${ssm:/${self:provider.stage}/ses/ses_from_email}',
     },
     apiGateway: {
@@ -23,6 +24,13 @@ const serverlessConfiguration: AWS = {
         Action: ['ses:SendTemplatedEmail'],
         Resource: '*',
       },
+      {
+        Effect: 'Allow',
+        Action: ['ssm:GetParameter'],
+        Resource: [
+          'arn:aws:ssm:${self:provider.region}:*:parameter/${self:provider.stage}/email/hook-secret',
+        ],
+      },
     ],
   },
   functions,
@@ -31,13 +39,12 @@ const serverlessConfiguration: AWS = {
     'serverless-export-env',
     'serverless-esbuild',
     'serverless-domain-manager',
-    'serverless-certificate-creator',
     'serverless-add-api-key',
   ],
   custom: {
     dev: {
       name: 'dev',
-      domainName: 'cohub.click',
+      domainName: 'dev.talvio.co',
     },
     prod: {
       name: 'prod',
@@ -46,9 +53,12 @@ const serverlessConfiguration: AWS = {
     customDomain: {
       rest: {
         domainName: 'api.${self:custom.${self:provider.stage}.domainName}',
-        certificateName: '${self:custom.${self:provider.stage}.domainName}',
+        certificateArn:
+          '${ssm:/${self:provider.stage}/ssl/arn/${self:custom.${self:provider.stage}.domainName}}',
         stage: '${self:provider.stage}',
         basePath: 'email',
+        endpointType: 'edge',
+        securityPolicy: 'tls_1_2',
         createRoute53Record: true,
       },
     },

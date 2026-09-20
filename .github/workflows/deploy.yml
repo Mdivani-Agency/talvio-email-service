@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [development]
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: Target stage
+        type: choice
+        options: [dev, prod]
+        default: dev
+
+concurrency:
+  group: email-service-${{ github.event.inputs.stage || 'dev' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: us-west-1
+
+jobs:
+  test:
+    name: lint + test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Enable Yarn
+        run: corepack enable
+      - name: Install
+        run: yarn install --immutable
+      - name: Lint
+        run: yarn lint
+      - name: Test
+        run: yarn test:coverage
+
+  deploy-dev:
+    name: deploy (dev)
+    needs: test
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/development') ||
+      (github.event_name == 'workflow_dispatch' && inputs.stage == 'dev')
+    runs-on: ubuntu-latest
+    environment: dev
+    env:
+      ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Enable Yarn
+        run: corepack enable
+      - name: Install
+        run: yarn install --immutable
+      - name: Skip deploy (no AWS_DEPLOY_ROLE_ARN)
+        if: env.ROLE_ARN == ''
+        run: |
+          echo "Set GitHub Environment variable AWS_DEPLOY_ROLE_ARN to the bootstrap output deploy_role_arn (or SSM /dev/ci/deploy-role-arn)." >> "$GITHUB_STEP_SUMMARY"
+      - name: Configure AWS (OIDC)
+        if: env.ROLE_ARN != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Deploy
+        if: env.ROLE_ARN != ''
+        run: yarn sls deploy --stage dev --verbose
+
+  deploy-prod:
+    name: deploy (prod)
+    needs: test
+    if: github.event_name == 'workflow_dispatch' && inputs.stage == 'prod'
+    runs-on: ubuntu-latest
+    environment: prod
+    env:
+      ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Enable Yarn
+        run: corepack enable
+      - name: Install
+        run: yarn install --immutable
+      - name: Skip deploy (no AWS_DEPLOY_ROLE_ARN)
+        if: env.ROLE_ARN == ''
+        run: |
+          echo "Set GitHub Environment variable AWS_DEPLOY_ROLE_ARN to the prod bootstrap output deploy_role_arn." >> "$GITHUB_STEP_SUMMARY"
+      - name: Configure AWS (OIDC)
+        if: env.ROLE_ARN != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Deploy
+        if: env.ROLE_ARN != ''
+        run: yarn sls deploy --stage prod --verbose
