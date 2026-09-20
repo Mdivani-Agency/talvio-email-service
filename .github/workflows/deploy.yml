@@ -16,6 +16,9 @@ permissions:
 
 env:
   AWS_REGION: us-west-1
+  SLS_DISABLE_AUTO_UPDATE: '1'
+  SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+  SERVERLESS_LICENSE_KEY: ${{ secrets.SERVERLESS_LICENSE_KEY }}
 
 jobs:
   test:
@@ -25,13 +28,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
       - name: Enable Yarn
         run: corepack enable
       - name: Install
         run: yarn install --immutable
       - name: Lint
         run: yarn lint
+      - name: Typecheck
+        run: yarn typecheck
       - name: Test
         run: yarn test:coverage
 
@@ -49,7 +54,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
       - name: Enable Yarn
         run: corepack enable
       - name: Install
@@ -82,7 +87,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
       - name: Enable Yarn
         run: corepack enable
       - name: Install

@@ -2,17 +2,24 @@ import type { AWS } from '@serverless/typescript';
 
 import * as functions from './src/functions';
 
-// serverless-offline@12 is ESM + top-level await. Serverless v3 loads plugins
-// with require(), which Node 22+ rejects. Only attach it for local offline.
-const runningOffline = process.argv.some((arg) => arg === 'offline' || arg === 'start');
+type ServerlessV4 = AWS & {
+  build?: {
+    esbuild?: {
+      bundle?: boolean;
+      minify?: boolean;
+      sourcemap?: boolean;
+      exclude?: string[];
+    };
+  };
+};
 
-const serverlessConfiguration: AWS = {
+const serverlessConfiguration: ServerlessV4 = {
   service: 'email-service',
-  frameworkVersion: '3',
+  frameworkVersion: '4',
 
   provider: {
     name: 'aws',
-    runtime: 'nodejs18.x',
+    runtime: 'nodejs22.x',
     stage: '${opt:stage, "dev"}',
     region: 'us-west-1',
     environment: {
@@ -39,12 +46,20 @@ const serverlessConfiguration: AWS = {
   },
   functions,
   plugins: [
-    ...(runningOffline ? ['serverless-offline'] : []),
+    'serverless-offline',
     'serverless-export-env',
-    'serverless-esbuild',
     'serverless-domain-manager',
     'serverless-add-api-key',
   ],
+  build: {
+    esbuild: {
+      bundle: true,
+      minify: true,
+      sourcemap: true,
+      // Bundle pinned AWS SDK clients instead of the Lambda runtime SDK.
+      exclude: ['!@aws-sdk/*'],
+    },
+  },
   custom: {
     dev: {
       name: 'dev',
@@ -74,14 +89,6 @@ const serverlessConfiguration: AWS = {
         },
       },
     ],
-    esbuild: {
-      bundle: true,
-      minify: true,
-      target: 'node18',
-      platform: 'node',
-      sourcemap: true,
-      external: ['aws-sdk'],
-    },
     export: {
       filename: '.env',
     },

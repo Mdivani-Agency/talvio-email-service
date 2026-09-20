@@ -2,7 +2,7 @@
 
 Sole sender for Talvio mail (D5). App-triggered `welcome` stays on the API-key route. Supabase Auth OTP / magic link / recovery / invite / email change go through the public Standard Webhooks hook.
 
-Linear: [MDI-186](https://linear.app/mdivani/issue/MDI-186)
+Linear: [MDI-186](https://linear.app/mdivani/issue/MDI-186), [MDI-191](https://linear.app/mdivani/issue/MDI-191/email-media-upgrade-node-22-sls-typescript-5-aws-sdk)
 
 ## Routes
 
@@ -81,7 +81,9 @@ yarn sls create_domain --stage dev   # custom domain api.dev.talvio.co (needs AW
 yarn start                           # serverless-offline → http://localhost:3000
 ```
 
-`yarn start` / `sls offline` needs **Node 18**. Serverless v3 cannot `require()` ESM `serverless-offline` on Node 22+. `create_domain`, `deploy`, and tests are fine on Node 22.
+Local and CI use **Node 22**. Serverless Framework **4.42** ships native esbuild (`serverless-esbuild` is gone). `yarn start` / `sls offline` works on Node 22 via `serverless-offline@14`. Middy is **6.4** (Jest 29 stays CJS; Middy 7 is ESM-only).
+
+SF4 requires a license or access key. Set `SERVERLESS_ACCESS_KEY` or `SERVERLESS_LICENSE_KEY` locally and as a GitHub Environment secret on `dev` and `prod`. Organizations over $2M/year need a paid subscription; otherwise the CLI is free after sign-in.
 
 Hook (offline): `POST http://localhost:3000/hooks/send-email`
 
@@ -109,5 +111,7 @@ Use the same `SEND_EMAIL_HOOK_SECRET` as `.env.example` (or your generated `v1,w
 `development` is the default working branch and **only** deploys dev. `main` is production and is the **only** branch that deploys prod.
 
 OIDC role is `talvio-gha-deploy-<env>` from `talvio-terraform-iac` bootstrap. Set Environment variable `AWS_DEPLOY_ROLE_ARN` (value is also in SSM `/${env}/ci/deploy-role-arn`). The workflow needs `id-token: write`.
+
+Deploy jobs also need Environment secret `SERVERLESS_ACCESS_KEY` or `SERVERLESS_LICENSE_KEY` (Serverless Framework 4).
 
 Trust `development` + Environment `dev` for the dev role, and `main` + Environment `prod` for the prod role.
