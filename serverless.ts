@@ -2,6 +2,10 @@ import type { AWS } from '@serverless/typescript';
 
 import * as functions from './src/functions';
 
+// serverless-offline@12 is ESM + top-level await. Serverless v3 loads plugins
+// with require(), which Node 22+ rejects. Only attach it for local offline.
+const runningOffline = process.argv.some((arg) => arg === 'offline' || arg === 'start');
+
 const serverlessConfiguration: AWS = {
   service: 'email-service',
   frameworkVersion: '3',
@@ -35,7 +39,7 @@ const serverlessConfiguration: AWS = {
   },
   functions,
   plugins: [
-    'serverless-offline',
+    ...(runningOffline ? ['serverless-offline'] : []),
     'serverless-export-env',
     'serverless-esbuild',
     'serverless-domain-manager',
