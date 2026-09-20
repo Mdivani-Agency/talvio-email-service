@@ -77,8 +77,11 @@ corepack enable
 yarn install
 yarn lint
 yarn test:coverage
-yarn start   # serverless-offline → http://localhost:3000
+yarn sls create_domain --stage dev   # custom domain api.dev.talvio.co (needs AWS creds)
+yarn start                           # serverless-offline → http://localhost:3000
 ```
+
+`yarn start` / `sls offline` needs **Node 18**. Serverless v3 cannot `require()` ESM `serverless-offline` on Node 22+. `create_domain`, `deploy`, and tests are fine on Node 22.
 
 Hook (offline): `POST http://localhost:3000/hooks/send-email`
 
