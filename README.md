@@ -100,9 +100,11 @@ Use the same `SEND_EMAIL_HOOK_SECRET` as `.env.example` (or your generated `v1,w
 | Event | What runs |
 | --- | --- |
 | Pull request | lint + test |
-| Push to `development`, or `workflow_dispatch` stage=`dev` | `sls deploy --stage dev` (Environment `dev`) |
-| `workflow_dispatch` stage=`prod` | `sls deploy --stage prod` (Environment `prod`) |
+| Push (or `workflow_dispatch`) on `development` | `sls deploy --stage dev` (Environment `dev`) |
+| Push (or `workflow_dispatch`) on `main` | `sls deploy --stage prod` (Environment `prod`) |
+
+`development` is the default working branch and **only** deploys dev. `main` is production and is the **only** branch that deploys prod.
 
 OIDC role is `talvio-gha-deploy-<env>` from `talvio-terraform-iac` bootstrap. Set Environment variable `AWS_DEPLOY_ROLE_ARN` (value is also in SSM `/${env}/ci/deploy-role-arn`). The workflow needs `id-token: write`.
 
-Default branch is `development`. Email-service is trusted on `development` and GitHub Environments `dev` / `prod`.
+Trust `development` + Environment `dev` for the dev role, and `main` + Environment `prod` for the prod role.
