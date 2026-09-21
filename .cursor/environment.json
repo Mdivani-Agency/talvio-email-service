@@ -1,11 +1,11 @@
 {
   "name": "talvio-email-service",
   "user": "ubuntu",
-  "install": "corepack enable && corepack prepare yarn@4.3.1 --activate && yarn install --immutable && { [ -f .env ] || cp .env.example .env; }",
+  "install": "cd /agent/repos/talvio-email-service && corepack enable && corepack prepare yarn@4.3.1 --activate && yarn install --immutable && { [ -f .env ] || cp .env.example .env; }",
   "terminals": [
     {
       "name": "serverless-offline",
-      "command": "export SLS_DISABLE_AUTO_UPDATE=1; set -a; [ -f .env ] && . ./.env; set +a; if [ -n \"${SERVERLESS_ACCESS_KEY:-}${SERVERLESS_LICENSE_KEY:-}\" ]; then yarn start; else echo 'serverless-offline not started. Set the SERVERLESS_ACCESS_KEY (or SERVERLESS_LICENSE_KEY) secret to run the Serverless Framework v4 offline server on http://localhost:3000 (AWS credentials with SSM read access are also required to resolve serverless.ts variables). The dev inner loop (yarn lint / yarn typecheck / yarn test:coverage) works without these.'; fi"
+      "command": "cd /agent/repos/talvio-email-service; export SLS_DISABLE_AUTO_UPDATE=1; set -a; [ -f .env ] && . ./.env; set +a; if [ -n \"${SERVERLESS_ACCESS_KEY:-}${SERVERLESS_LICENSE_KEY:-}\" ]; then yarn start; else echo 'serverless-offline not started. Set the SERVERLESS_ACCESS_KEY (or SERVERLESS_LICENSE_KEY) secret to run the Serverless Framework v4 offline server on http://localhost:3000 (AWS credentials with SSM read access are also required to resolve serverless.ts variables). The dev inner loop (yarn lint / yarn typecheck / yarn test:coverage) works without these.'; fi"
     }
   ]
 }
