@@ -51,7 +51,7 @@ Do not send Auth mail through `private/v1/send`. The hook body is not `{ to, tem
 {app_origin}/auth/v1/verify?token={token_hash}&type={email_action_type}&redirect_to={redirect_to}
 ```
 
-`app_origin` is the origin of `redirect_to` (for example `https://dev.talvio.co`). The app proxies `GET /auth/v1/verify` to Supabase Auth. Hosted Auth's `site_url` is the project API URL and is not used as the link host.
+`app_origin` is the HTTP(S) origin of `redirect_to` (for example `https://dev.talvio.co`). When `redirect_to` is missing or not HTTP(S), the hook falls back to `site_url` with a trailing `/auth/v1` removed. Payloads with neither origin are rejected. The app redirects `GET /auth/v1/verify` to Supabase Auth so the browser, not the app server, calls verify.
 
 Templates themselves live in `talvio-terraform-iac` (`variables/templates/`).
 

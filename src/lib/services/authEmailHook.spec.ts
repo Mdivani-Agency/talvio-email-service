@@ -46,6 +46,32 @@ describe('authEmailHook', () => {
     );
   });
 
+  it('falls back to site_url when redirect_to is missing or not http(s)', () => {
+    expect(
+      buildConfirmationUrl({
+        site_url: 'https://abcd.supabase.co/auth/v1/',
+        token_hash: 'hash',
+        email_action_type: 'magiclink',
+      }),
+    ).toBe('https://abcd.supabase.co/auth/v1/verify?token=hash&type=magiclink&redirect_to=');
+
+    expect(
+      buildConfirmationUrl({
+        site_url: 'https://abcd.supabase.co',
+        token_hash: 'hash',
+        email_action_type: 'recovery',
+        redirect_to: 'talvio://auth/callback',
+      }),
+    ).toBe(
+      'https://abcd.supabase.co/auth/v1/verify?token=hash&type=recovery&redirect_to=talvio%3A%2F%2Fauth%2Fcallback',
+    );
+  });
+
+  it('returns null when neither redirect_to nor site_url is an http(s) origin', () => {
+    expect(buildConfirmationUrl({ redirect_to: 'not a url', site_url: 'talvio://app' })).toBeNull();
+    expect(buildConfirmationUrl({})).toBeNull();
+  });
+
   it('fills template placeholders including email_change fields', () => {
     expect(
       templateDataForHook(

@@ -4,6 +4,7 @@ import { emailService } from '@lib/services';
 import { getHookSecret } from '@lib/services/hookSecret';
 import {
   AuthHookPayload,
+  buildConfirmationUrl,
   isAuthEmailActionType,
   templateDataForHook,
   templateForAction,
@@ -61,6 +62,10 @@ export const sendEmailHook = async (event: APIGatewayEvent): Promise<APIGatewayP
 
   if (!isAuthEmailActionType(actionType)) {
     return hookError(400, `Unknown email_action_type: ${actionType || '(empty)'}`);
+  }
+
+  if (!buildConfirmationUrl(emailData)) {
+    return hookError(400, 'Missing usable redirect_to or site_url');
   }
 
   try {
