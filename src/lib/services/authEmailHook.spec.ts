@@ -20,17 +20,56 @@ describe('authEmailHook', () => {
     expect(isAuthEmailActionType('')).toBe(false);
   });
 
-  it('builds the Supabase verify URL from email_data', () => {
+  it('builds the verify URL on the app host from redirect_to', () => {
     expect(
       buildConfirmationUrl({
-        site_url: 'https://abcd.supabase.co/',
+        site_url: 'https://abcd.supabase.co/auth/v1',
         token_hash: 'hash123',
         email_action_type: 'magiclink',
         redirect_to: 'https://dev.talvio.co/auth/callback',
       }),
     ).toBe(
-      'https://abcd.supabase.co/auth/v1/verify?token=hash123&type=magiclink&redirect_to=https%3A%2F%2Fdev.talvio.co%2Fauth%2Fcallback',
+      'https://dev.talvio.co/auth/v1/verify?token=hash123&type=magiclink&redirect_to=https%3A%2F%2Fdev.talvio.co%2Fauth%2Fcallback',
     );
+  });
+
+  it('keeps the app host when redirect_to includes a next path', () => {
+    expect(
+      buildConfirmationUrl({
+        site_url: 'https://abcd.supabase.co/auth/v1',
+        token_hash: 'pkce_hash',
+        email_action_type: 'signup',
+        redirect_to: 'https://dev.talvio.co/auth/callback?next=%2Faccount',
+      }),
+    ).toBe(
+      'https://dev.talvio.co/auth/v1/verify?token=pkce_hash&type=signup&redirect_to=https%3A%2F%2Fdev.talvio.co%2Fauth%2Fcallback%3Fnext%3D%252Faccount',
+    );
+  });
+
+  it('falls back to site_url when redirect_to is missing or not http(s)', () => {
+    expect(
+      buildConfirmationUrl({
+        site_url: 'https://abcd.supabase.co/auth/v1/',
+        token_hash: 'hash',
+        email_action_type: 'magiclink',
+      }),
+    ).toBe('https://abcd.supabase.co/auth/v1/verify?token=hash&type=magiclink&redirect_to=');
+
+    expect(
+      buildConfirmationUrl({
+        site_url: 'https://abcd.supabase.co',
+        token_hash: 'hash',
+        email_action_type: 'recovery',
+        redirect_to: 'talvio://auth/callback',
+      }),
+    ).toBe(
+      'https://abcd.supabase.co/auth/v1/verify?token=hash&type=recovery&redirect_to=talvio%3A%2F%2Fauth%2Fcallback',
+    );
+  });
+
+  it('returns null when neither redirect_to nor site_url is an http(s) origin', () => {
+    expect(buildConfirmationUrl({ redirect_to: 'not a url', site_url: 'talvio://app' })).toBeNull();
+    expect(buildConfirmationUrl({})).toBeNull();
   });
 
   it('fills template placeholders including email_change fields', () => {
@@ -51,10 +90,10 @@ describe('authEmailHook', () => {
       token: '111111',
       token_new: '222222',
       confirmation_url:
-        'https://abcd.supabase.co/auth/v1/verify?token=hash&type=email_change&redirect_to=https%3A%2F%2Fdev.talvio.co',
+        'https://dev.talvio.co/auth/v1/verify?token=hash&type=email_change&redirect_to=https%3A%2F%2Fdev.talvio.co',
       email: 'new@talvio.co',
       old_email: 'old@talvio.co',
-      site_url: 'https://abcd.supabase.co',
+      site_url: 'https://dev.talvio.co',
     });
   });
 });

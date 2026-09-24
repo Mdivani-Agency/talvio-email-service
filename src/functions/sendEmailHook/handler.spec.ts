@@ -90,6 +90,19 @@ describe('sendEmailHook', () => {
     expect(emailService.send).not.toHaveBeenCalled();
   });
 
+  it('returns 400 when redirect_to and site_url have no http(s) origin', async () => {
+    const unusable = {
+      ...payload,
+      email_data: { ...payload.email_data, redirect_to: 'talvio://callback', site_url: '' },
+    };
+    const res = await sendEmailHook(signedEvent({}, JSON.stringify(unusable)));
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body)).toEqual({
+      error: { message: 'Missing usable redirect_to or site_url' },
+    });
+    expect(emailService.send).not.toHaveBeenCalled();
+  });
+
   it('sends a magic_link template and returns 200 {}', async () => {
     const res = await sendEmailHook(signedEvent());
     expect(res.statusCode).toBe(200);
@@ -101,7 +114,7 @@ describe('sendEmailHook', () => {
         token: '123456',
         email: 'ada@talvio.co',
         confirmation_url:
-          'https://abcd.supabase.co/auth/v1/verify?token=hash123&type=magiclink&redirect_to=https%3A%2F%2Fdev.talvio.co%2Fauth%2Fcallback',
+          'https://dev.talvio.co/auth/v1/verify?token=hash123&type=magiclink&redirect_to=https%3A%2F%2Fdev.talvio.co%2Fauth%2Fcallback',
       }),
     });
   });

@@ -38,14 +38,39 @@ export function templateForAction(actionType: AuthEmailActionType): EmailTemplat
   return ACTION_TEMPLATE[actionType];
 }
 
-export function buildConfirmationUrl(emailData: AuthEmailData): string {
-  const siteUrl = (emailData.site_url || '').replace(/\/$/, '');
+/** HTTP(S) origin. Custom schemes and malformed values are rejected. */
+export function httpOrigin(value: string | undefined): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+    if (!url.host || url.origin === 'null') return null;
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
+/** Auth API origin. Hosted hooks send site_url with a trailing /auth/v1. */
+export function authApiOrigin(siteUrl: string | undefined): string | null {
+  if (!siteUrl) return null;
+  return httpOrigin(siteUrl.replace(/\/+$/, '').replace(/\/auth\/v1$/, ''));
+}
+
+/** Product host from redirect_to, otherwise the Auth API origin. */
+export function confirmationOrigin(emailData: AuthEmailData): string | null {
+  return httpOrigin(emailData.redirect_to) ?? authApiOrigin(emailData.site_url);
+}
+
+export function buildConfirmationUrl(emailData: AuthEmailData): string | null {
+  const origin = confirmationOrigin(emailData);
+  if (!origin) return null;
   const params = new URLSearchParams({
     token: emailData.token_hash || '',
     type: emailData.email_action_type || '',
     redirect_to: emailData.redirect_to || '',
   });
-  return `${siteUrl}/auth/v1/verify?${params.toString()}`;
+  return `${origin}/auth/v1/verify?${params.toString()}`;
 }
 
 export function templateDataForHook(
@@ -55,9 +80,9 @@ export function templateDataForHook(
   return {
     token: emailData.token || '',
     token_new: emailData.token_new || '',
-    confirmation_url: buildConfirmationUrl(emailData),
+    confirmation_url: buildConfirmationUrl(emailData) || '',
     email: user.email || '',
     old_email: emailData.old_email || user.email || '',
-    site_url: emailData.site_url || '',
+    site_url: confirmationOrigin(emailData) || '',
   };
 }
