@@ -102,7 +102,7 @@ Use the same `SEND_EMAIL_HOOK_SECRET` as `.env.example` (or your generated `v1,w
 
 ## GitHub Actions
 
-[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) replaces `.gitlab-ci.yml`. GitLab is not a deploy path.
 
 | Event | What runs |
 | --- | --- |
