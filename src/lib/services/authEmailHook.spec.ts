@@ -33,6 +33,19 @@ describe('authEmailHook', () => {
     );
   });
 
+  it('does not double /auth/v1 when site_url is the Auth API URL', () => {
+    expect(
+      buildConfirmationUrl({
+        site_url: 'https://abcd.supabase.co/auth/v1',
+        token_hash: 'pkce_hash',
+        email_action_type: 'signup',
+        redirect_to: 'https://dev.talvio.co/auth/callback?next=%2Faccount',
+      }),
+    ).toBe(
+      'https://abcd.supabase.co/auth/v1/verify?token=pkce_hash&type=signup&redirect_to=https%3A%2F%2Fdev.talvio.co%2Fauth%2Fcallback%3Fnext%3D%252Faccount',
+    );
+  });
+
   it('fills template placeholders including email_change fields', () => {
     expect(
       templateDataForHook(
