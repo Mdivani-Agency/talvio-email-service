@@ -48,10 +48,10 @@ Do not send Auth mail through `private/v1/send`. The hook body is not `{ to, tem
 `confirmation_url` is built in the hook:
 
 ```
-{origin}/auth/v1/verify?token={token_hash}&type={email_action_type}&redirect_to={redirect_to}
-
-`origin` is `site_url` with a trailing `/auth/v1` removed. Hosted Auth sends `site_url` as `https://<ref>.supabase.co/auth/v1`; appending `/auth/v1/verify` again produces a path Kong rejects with "No API key found in request".
+{app_origin}/auth/v1/verify?token={token_hash}&type={email_action_type}&redirect_to={redirect_to}
 ```
+
+`app_origin` is the origin of `redirect_to` (for example `https://dev.talvio.co`). The app proxies `GET /auth/v1/verify` to Supabase Auth. Hosted Auth's `site_url` is the project API URL and is not used as the link host.
 
 Templates themselves live in `talvio-terraform-iac` (`variables/templates/`).
 

@@ -101,7 +101,7 @@ describe('sendEmailHook', () => {
         token: '123456',
         email: 'ada@talvio.co',
         confirmation_url:
-          'https://abcd.supabase.co/auth/v1/verify?token=hash123&type=magiclink&redirect_to=https%3A%2F%2Fdev.talvio.co%2Fauth%2Fcallback',
+          'https://dev.talvio.co/auth/v1/verify?token=hash123&type=magiclink&redirect_to=https%3A%2F%2Fdev.talvio.co%2Fauth%2Fcallback',
       }),
     });
   });

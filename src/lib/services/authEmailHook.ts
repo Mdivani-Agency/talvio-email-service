@@ -38,13 +38,18 @@ export function templateForAction(actionType: AuthEmailActionType): EmailTemplat
   return ACTION_TEMPLATE[actionType];
 }
 
-/** Auth API origin. Hosted hooks send site_url with a trailing /auth/v1. */
-export function authApiOrigin(siteUrl: string): string {
-  return siteUrl.replace(/\/+$/, '').replace(/\/auth\/v1$/, '');
+/** App origin from redirect_to. Magic links are opened on the product host. */
+export function appOrigin(redirectTo: string | undefined): string | null {
+  if (!redirectTo) return null;
+  try {
+    return new URL(redirectTo).origin;
+  } catch {
+    return null;
+  }
 }
 
 export function buildConfirmationUrl(emailData: AuthEmailData): string {
-  const origin = authApiOrigin(emailData.site_url || '');
+  const origin = appOrigin(emailData.redirect_to) ?? '';
   const params = new URLSearchParams({
     token: emailData.token_hash || '',
     type: emailData.email_action_type || '',
@@ -63,6 +68,6 @@ export function templateDataForHook(
     confirmation_url: buildConfirmationUrl(emailData),
     email: user.email || '',
     old_email: emailData.old_email || user.email || '',
-    site_url: emailData.site_url || '',
+    site_url: appOrigin(emailData.redirect_to) || emailData.site_url || '',
   };
 }

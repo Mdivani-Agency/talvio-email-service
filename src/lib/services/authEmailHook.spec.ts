@@ -20,20 +20,20 @@ describe('authEmailHook', () => {
     expect(isAuthEmailActionType('')).toBe(false);
   });
 
-  it('builds the Supabase verify URL from email_data', () => {
+  it('builds the verify URL on the app host from redirect_to', () => {
     expect(
       buildConfirmationUrl({
-        site_url: 'https://abcd.supabase.co/',
+        site_url: 'https://abcd.supabase.co/auth/v1',
         token_hash: 'hash123',
         email_action_type: 'magiclink',
         redirect_to: 'https://dev.talvio.co/auth/callback',
       }),
     ).toBe(
-      'https://abcd.supabase.co/auth/v1/verify?token=hash123&type=magiclink&redirect_to=https%3A%2F%2Fdev.talvio.co%2Fauth%2Fcallback',
+      'https://dev.talvio.co/auth/v1/verify?token=hash123&type=magiclink&redirect_to=https%3A%2F%2Fdev.talvio.co%2Fauth%2Fcallback',
     );
   });
 
-  it('does not double /auth/v1 when site_url is the Auth API URL', () => {
+  it('keeps the app host when redirect_to includes a next path', () => {
     expect(
       buildConfirmationUrl({
         site_url: 'https://abcd.supabase.co/auth/v1',
@@ -42,7 +42,7 @@ describe('authEmailHook', () => {
         redirect_to: 'https://dev.talvio.co/auth/callback?next=%2Faccount',
       }),
     ).toBe(
-      'https://abcd.supabase.co/auth/v1/verify?token=pkce_hash&type=signup&redirect_to=https%3A%2F%2Fdev.talvio.co%2Fauth%2Fcallback%3Fnext%3D%252Faccount',
+      'https://dev.talvio.co/auth/v1/verify?token=pkce_hash&type=signup&redirect_to=https%3A%2F%2Fdev.talvio.co%2Fauth%2Fcallback%3Fnext%3D%252Faccount',
     );
   });
 
@@ -64,10 +64,10 @@ describe('authEmailHook', () => {
       token: '111111',
       token_new: '222222',
       confirmation_url:
-        'https://abcd.supabase.co/auth/v1/verify?token=hash&type=email_change&redirect_to=https%3A%2F%2Fdev.talvio.co',
+        'https://dev.talvio.co/auth/v1/verify?token=hash&type=email_change&redirect_to=https%3A%2F%2Fdev.talvio.co',
       email: 'new@talvio.co',
       old_email: 'old@talvio.co',
-      site_url: 'https://abcd.supabase.co',
+      site_url: 'https://dev.talvio.co',
     });
   });
 });
