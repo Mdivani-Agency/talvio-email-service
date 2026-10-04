@@ -5,7 +5,7 @@ export type MiddyApiGWEvent<TBody = null, TPath = null, TQuery = null> = Omit<
   'body' | 'pathParameters' | 'queryStringParameters'
 > & { body: TBody; pathParameters: TPath; queryStringParameters: TQuery };
 
-export type EmailTemplate = 'magic_link' | 'welcome';
+export type EmailTemplate = 'magic_link' | 'recovery' | 'invite' | 'email_change' | 'welcome';
 
 export type SendEmailRequest = {
   to: string[];

@@ -16,7 +16,7 @@ export const schema = {
           },
           template: {
             type: 'string',
-            enum: ['magic_link', 'welcome'],
+            enum: ['magic_link', 'recovery', 'invite', 'email_change', 'welcome'],
           },
           templateData: {
             type: 'object',

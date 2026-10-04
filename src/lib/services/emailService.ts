@@ -3,12 +3,23 @@ import {
   SendTemplatedEmailCommand,
   SESClient,
 } from '@aws-sdk/client-ses';
+import httpError from 'http-errors';
 import { EmailTemplate, SendEmailRequest } from '@lib/types';
 
-const templateMap: Record<EmailTemplate, string> = {
+export const templateMap: Record<EmailTemplate, string> = {
   magic_link: 'magic_link',
+  recovery: 'recovery',
+  invite: 'invite',
+  email_change: 'email_change',
   welcome: 'welcome',
 };
+
+export function sesTemplateName(template: string): string {
+  if (!(template in templateMap)) {
+    throw new httpError.BadRequest(`Unknown email template: ${template}`);
+  }
+  return templateMap[template as EmailTemplate];
+}
 
 class EmailService {
   private readonly ses: SESClient;
@@ -19,9 +30,9 @@ class EmailService {
 
   async send({ to, template, templateData }: SendEmailRequest) {
     const params: SendTemplatedEmailCommandInput = {
-      Source: process.env.SES_FROM_EMAIL || 'no-reply@example.com',
+      Source: process.env.SES_FROM_EMAIL || 'no-reply@dev.talvio.co',
       Destination: { ToAddresses: to },
-      Template: templateMap[template],
+      Template: sesTemplateName(template),
       TemplateData: JSON.stringify(templateData),
     };
 

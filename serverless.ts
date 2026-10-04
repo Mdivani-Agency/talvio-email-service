@@ -2,16 +2,28 @@ import type { AWS } from '@serverless/typescript';
 
 import * as functions from './src/functions';
 
-const serverlessConfiguration: AWS = {
+type ServerlessV4 = AWS & {
+  build?: {
+    esbuild?: {
+      bundle?: boolean;
+      minify?: boolean;
+      sourcemap?: boolean;
+      exclude?: string[];
+    };
+  };
+};
+
+const serverlessConfiguration: ServerlessV4 = {
   service: 'email-service',
-  frameworkVersion: '3',
+  frameworkVersion: '4',
 
   provider: {
     name: 'aws',
-    runtime: 'nodejs18.x',
+    runtime: 'nodejs22.x',
     stage: '${opt:stage, "dev"}',
     region: 'us-west-1',
     environment: {
+      STAGE: '${self:provider.stage}',
       SES_FROM_EMAIL: '${ssm:/${self:provider.stage}/ses/ses_from_email}',
     },
     apiGateway: {
@@ -23,21 +35,35 @@ const serverlessConfiguration: AWS = {
         Action: ['ses:SendTemplatedEmail'],
         Resource: '*',
       },
+      {
+        Effect: 'Allow',
+        Action: ['ssm:GetParameter'],
+        Resource: [
+          'arn:aws:ssm:${self:provider.region}:*:parameter/${self:provider.stage}/email/hook-secret',
+        ],
+      },
     ],
   },
   functions,
   plugins: [
     'serverless-offline',
     'serverless-export-env',
-    'serverless-esbuild',
     'serverless-domain-manager',
-    'serverless-certificate-creator',
     'serverless-add-api-key',
   ],
+  build: {
+    esbuild: {
+      bundle: true,
+      minify: true,
+      sourcemap: true,
+      // Bundle pinned AWS SDK clients instead of the Lambda runtime SDK.
+      exclude: ['!@aws-sdk/*'],
+    },
+  },
   custom: {
     dev: {
       name: 'dev',
-      domainName: 'cohub.click',
+      domainName: 'dev.talvio.co',
     },
     prod: {
       name: 'prod',
@@ -46,9 +72,12 @@ const serverlessConfiguration: AWS = {
     customDomain: {
       rest: {
         domainName: 'api.${self:custom.${self:provider.stage}.domainName}',
-        certificateName: '${self:custom.${self:provider.stage}.domainName}',
+        certificateArn:
+          '${ssm:/${self:provider.stage}/ssl/arn/${self:custom.${self:provider.stage}.domainName}}',
         stage: '${self:provider.stage}',
         basePath: 'email',
+        endpointType: 'edge',
+        securityPolicy: 'tls_1_2',
         createRoute53Record: true,
       },
     },
@@ -60,14 +89,6 @@ const serverlessConfiguration: AWS = {
         },
       },
     ],
-    esbuild: {
-      bundle: true,
-      minify: true,
-      target: 'node18',
-      platform: 'node',
-      sourcemap: true,
-      external: ['aws-sdk'],
-    },
     export: {
       filename: '.env',
     },

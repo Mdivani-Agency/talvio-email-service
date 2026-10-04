@@ -4,7 +4,7 @@ import { MiddyApiGWEvent, SendEmailRequest } from '@lib/types';
 import { emailService } from '@lib/services';
 import { schema } from './schema';
 
-const sendEmail = async (event: MiddyApiGWEvent<SendEmailRequest>) => {
+export const sendEmail = async (event: MiddyApiGWEvent<SendEmailRequest>) => {
   const { to, template, templateData } = event.body;
   try {
     await emailService.send({ to, template, templateData });
@@ -13,6 +13,9 @@ const sendEmail = async (event: MiddyApiGWEvent<SendEmailRequest>) => {
       body: JSON.stringify({ message: 'Emails sent successfully' }),
     };
   } catch (ex) {
+    if (httpError.isHttpError(ex) && ex.statusCode < 500) {
+      throw ex;
+    }
     console.error('Failed to send emails', ex);
     throw new httpError.InternalServerError('Failed to send emails');
   }
